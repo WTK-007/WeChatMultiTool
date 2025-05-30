@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>微信多开器</title>
+  <style>
+      * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+      }
+
+      body {
+          font-family: 'Microsoft YaHei', Arial, sans-serif;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          min-height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 20px;
+      }
+
+      .container {
+          background: white;
+          border-radius: 15px;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+          padding: 40px;
+          width: 100%;
+          max-width: 600px;
+      }
+
+      .title {
+          text-align: center;
+          color: #333;
+          font-size: 28px;
+          font-weight: bold;
+          margin-bottom: 30px;
+          position: relative;
+      }
+
+      .title::after {
+          content: '';
+          position: absolute;
+          bottom: -10px;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 60px;
+          height: 3px;
+          background: linear-gradient(90deg, #667eea, #764ba2);
+          border-radius: 2px;
+      }
+
+      .form-group {
+          margin-bottom: 25px;
+      }
+
+      .form-label {
+          display: block;
+          margin-bottom: 8px;
+          color: #555;
+          font-weight: 500;
+          font-size: 14px;
+      }
+
+      .form-input {
+          width: 100%;
+          padding: 12px 15px;
+          border: 2px solid #e1e5e9;
+          border-radius: 8px;
+          font-size: 14px;
+          transition: all 0.3s ease;
+          background: #fafbfc;
+      }
+
+      .form-input:focus {
+          outline: none;
+          border-color: #667eea;
+          background: white;
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .path-input-group {
+          display: flex;
+          gap: 10px;
+      }
+
+      .path-input {
+          flex: 1;
+      }
+
+      .help-btn {
+          padding: 12px 20px;
+          background: #28a745;
+          color: white;
+          border: none;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: all 0.3s ease;
+          white-space: nowrap;
+      }
+
+      .help-btn:hover {
+          background: #218838;
+          transform: translateY(-1px);
+      }
+
+      .number-input {
+          text-align: center;
+          font-size: 16px;
+          font-weight: bold;
+      }
+
+      .run-btn {
+          width: 100%;
+          padding: 15px;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          border: none;
+          border-radius: 10px;
+          font-size: 16px;
+          font-weight: bold;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          margin-top: 10px;
+      }
+
+      .run-btn:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+      }
+
+      .run-btn:active {
+          transform: translateY(0);
+      }
+
+      .run-btn:disabled {
+          background: #ccc;
+          cursor: not-allowed;
+          transform: none;
+          box-shadow: none;
+      }
+
+      .status {
+          margin-top: 20px;
+          padding: 15px;
+          border-radius: 8px;
+          text-align: center;
+          font-weight: 500;
+          display: none;
+      }
+
+      .status.success {
+          background: #d4edda;
+          color: #155724;
+          border: 1px solid #c3e6cb;
+      }
+
+      .status.error {
+          background: #f8d7da;
+          color: #721c24;
+          border: 1px solid #f5c6cb;
+      }
+
+      .status.info {
+          background: #d1ecf1;
+          color: #0c5460;
+          border: 1px solid #bee5eb;
+      }
+
+      .note {
+          background: #fff3cd;
+          border: 1px solid #ffeaa7;
+          color: #856404;
+          padding: 15px;
+          border-radius: 8px;
+          margin-top: 20px;
+          font-size: 13px;
+          line-height: 1.5;
+      }
+
+      .note strong {
+          color: #6c5500;
+      }
+
+      .help-modal {
+          display: none;
+          position: fixed;
+          z-index: 1000;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(0,0,0,0.5);
+          backdrop-filter: blur(5px);
+      }
+
+      .help-modal-content {
+          background-color: white;
+          margin: 5% auto;
+          padding: 30px;
+          border-radius: 15px;
+          width: 90%;
+          max-width: 700px;
+          max-height: 80vh;
+          overflow-y: auto;
+          position: relative;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+      }
+
+      .close-btn {
+          position: absolute;
+          top: 15px;
+          right: 20px;
+          font-size: 28px;
+          font-weight: bold;
+          color: #aaa;
+          cursor: pointer;
+          transition: color 0.3s;
+      }
+
+      .close-btn:hover {
+          color: #000;
+      }
+
+      .help-title {
+          color: #333;
+          font-size: 24px;
+          font-weight: bold;
+          margin-bottom: 20px;
+          text-align: center;
+      }
+
+      .help-steps {
+          margin-bottom: 20px;
+      }
+
+      .help-step {
+          margin-bottom: 15px;
+          padding: 15px;
+          background: #f8f9fa;
+          border-radius: 8px;
+          border-left: 4px solid #667eea;
+      }
+
+      .help-step-title {
+          font-weight: bold;
+          color: #333;
+          margin-bottom: 8px;
+          font-size: 16px;
+      }
+
+      .help-step-desc {
+          color: #666;
+          line-height: 1.5;
+      }
+
+      .help-image {
+          width: 100%;
+          max-width: 500px;
+          height: auto;
+          border-radius: 8px;
+          box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+          margin: 15px auto;
+          display: block;
+      }
+
+      .highlight {
+          background: #fff3cd;
+          padding: 2px 6px;
+          border-radius: 4px;
+          color: #856404;
+          font-weight: 500;
+      }
+
+      .warning {
+          background: #f8d7da;
+          border: 1px solid #f5c6cb;
+          color: #721c24;
+          padding: 12px;
+          border-radius: 6px;
+          margin: 15px 0;
+          font-size: 14px;
+      }
+
+      .warning strong {
+          color: #721c24;
+      }
+
+      .common-paths {
+          background: #e7f3ff;
+          border: 1px solid #b8daff;
+          color: #004085;
+          padding: 15px;
+          border-radius: 8px;
+          margin: 15px 0;
+      }
+
+      .common-paths strong {
+          color: #004085;
+      }
+
+      .path-example {
+          font-family: 'Courier New', monospace;
+          background: #f1f3f4;
+          padding: 8px 12px;
+          border-radius: 4px;
+          margin: 5px 0;
+          display: block;
+          word-break: break-all;
+      }
+  </style>
+</head>
+<body>
+  <div class="container">
+      <h1 class="title">微信多开器</h1>
+      
+      <form id="launcherForm">
+          <div class="form-group">
+              <label class="form-label" for="wechatPath">微信程序路径</label>
+              <div class="path-input-group">
+                  <input type="text" 
+                         id="wechatPath" 
+                         class="form-input path-input" 
+                         placeholder="请输入微信程序的完整路径">
+                  <button type="button" class="help-btn" onclick="showHelp()">如何找到？</button>
+              </div>
+          </div>
+
+          <div class="form-group">
+              <label class="form-label" for="instanceCount">多开数量</label>
+              <input type="number" 
+                     id="instanceCount" 
+                     class="form-input number-input" 
+                     min="1" 
+                     max="10" 
+                     value="2"
+                     placeholder="请输入要启动的微信数量">
+          </div>
+
+          <button type="submit" class="run-btn" id="runBtn">
+              🚀 启动微信多开
+          </button>
+      </form>
+
+      <div id="status" class="status"></div>
+
+      <div class="note">
+          <strong>使用说明：</strong><br>
+          1. 请确保微信程序路径正确，点击"如何找到？"查看详细教程<br>
+          2. 只适用于Windows系统的电脑<br>
+          3. 多开数量建议不超过5个，避免系统卡顿<br>
+          4. 部分杀毒软件可能会拦截，请添加信任
+      </div>
+  </div>
+
+  <!-- 帮助弹窗 -->
+  <div id="helpModal" class="help-modal">
+      <div class="help-modal-content">
+          <span class="close-btn" onclick="closeHelp()">&times;</span>
+          <h2 class="help-title">📍 如何找到微信程序路径</h2>
+          
+          <div class="help-steps">
+              <div class="help-step">
+                  <div class="help-step-title">第一步：找到微信图标</div>
+                  <div class="help-step-desc">
+                      在桌面或开始菜单中找到微信图标，<span class="highlight">右键点击</span>微信图标
+                  </div>
+              </div>
+
+              <div class="help-step">
+                  <div class="help-step-title">第二步：打开属性</div>
+                  <div class="help-step-desc">
+                      在弹出的右键菜单中，点击<span class="highlight">"属性"</span>选项
+                  </div>
+              </div>
+
+              <div class="help-step">
+                  <div class="help-step-title">第三步：切换到快捷方式</div>
+                  <div class="help-step-desc">
+                      在属性窗口中，点击<span class="highlight">"快捷方式"</span>选项卡
+                  </div>
+              </div>
+
+              <div class="help-step">
+                  <div class="help-step-title">第四步：复制目标路径</div>
+                  <div class="help-step-desc">
+                      找到<span class="highlight">"目标(T)"</span>一栏，复制其中的完整路径
+                  </div>
+              </div>
+          </div>
+
+          <img src="image/example.png" 
+               alt="微信属性设置示例" 
+               class="help-image"
+               onerror="this.onerror=null; this.style.display='flex'; this.style.alignItems='center'; this.style.justifyContent='center'; this.style.minHeight='200px'; this.style.background='#f0f0f0'; this.style.border='2px dashed #ccc'; this.style.color='#666'; this.innerHTML='图片加载失败，请参考文字说明'">
+          
+          <div class="warning">
+              <strong>⚠️ 重要提醒：</strong><br>
+              • 只复制路径内容，<strong>不要复制引号</strong><br>
+              • 确保路径以 <code>.exe</code> 结尾<br>
+              • 如果目标栏中有引号，请去掉引号后再复制
+          </div>
+
+          <div class="common-paths">
+              <strong>💡 常见微信安装路径：</strong><br>
+              <span class="path-example">C:\Program Files (x86)\Tencent\WeChat\WeChat.exe</span>
+              <span class="path-example">D:\Program Files\Tencent\WeChat\WeChat.exe</span>
+              <span class="path-example">C:\Program Files\Tencent\WeChat\WeChat.exe</span>
+              <span class="path-example">E:\WeChat\WeChat.exe</span>
+          </div>
+      </div>
+  </div>
+
+  <script>
+      function showStatus(message, type = 'info') {
+          const statusDiv = document.getElementById('status');
+          statusDiv.textContent = message;
+          statusDiv.className = `status ${type}`;
+          statusDiv.style.display = 'block';
+      }
+
+      function showHelp() {
+          document.getElementById('helpModal').style.display = 'block';
+      }
+
+      function closeHelp() {
+          document.getElementById('helpModal').style.display = 'none';
+      }
+
+      // 点击弹窗外部关闭
+      window.onclick = function(event) {
+          const modal = document.getElementById('helpModal');
+          if (event.target === modal) {
+              modal.style.display = 'none';
+          }
+      }
+
+      function generateBatchScript(wechatPath, count) {
+          let script = '@echo off\n\n';
+          
+          for (let i = 0; i < count; i++) {
+              // 使用双引号格式（经过测试的有效格式）
+              script += `start "" "${wechatPath}""\n\n`;
+          }
+          
+          script += 'exit';
+          
+          return script;
+      }
+
+      function downloadBatchFile(content, filename) {
+          const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+      }
+
+      document.getElementById('launcherForm').addEventListener('submit', function(e) {
+          e.preventDefault();
+          
+          const wechatPath = document.getElementById('wechatPath').value.trim();
+          const instanceCount = parseInt(document.getElementById('instanceCount').value);
+          const runBtn = document.getElementById('runBtn');
+          
+          // 验证输入
+          if (!wechatPath) {
+              showStatus('请输入微信程序路径！点击"如何找到？"查看教程', 'error');
+              return;
+          }
+          
+          if (!instanceCount || instanceCount < 1 || instanceCount > 10) {
+              showStatus('请输入有效的多开数量（1-10）！', 'error');
+              return;
+          }
+          
+          // 检查路径格式
+          if (!wechatPath.toLowerCase().endsWith('.exe')) {
+              showStatus('路径格式不正确，请确保以 .exe 结尾！', 'error');
+              return;
+          }
+          
+          // 禁用按钮
+          runBtn.disabled = true;
+          runBtn.textContent = '正在生成...';
+          
+          try {
+              // 生成批处理脚本
+              const batchScript = generateBatchScript(wechatPath, instanceCount);
+              
+              // 下载批处理文件
+              const filename = `微信多开器_${instanceCount}个_${new Date().getTime()}.bat`;
+              downloadBatchFile(batchScript, filename);
+              
+              showStatus('已生成脚本文件，请下载后双击执行，执行前确保关闭所有微信程序！', 'success');
+              
+          } catch (error) {
+              showStatus('生成批处理文件时出错：' + error.message, 'error');
+          } finally {
+              // 恢复按钮
+              setTimeout(() => {
+                  runBtn.disabled = false;
+                  runBtn.textContent = '🚀 启动微信多开';
+              }, 2000);
+          }
+      });
+
+      // 页面加载完成后的初始化
+      document.addEventListener('DOMContentLoaded', function() {
+          showStatus('微信多开器已就绪！如不知道路径，请点击"如何找到？"查看教程', 'info');
+      });
+  </script>
+</body>
+</html>
